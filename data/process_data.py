@@ -3,6 +3,17 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 def load_data(messages_filepath, categories_filepath):
+    """
+    Loads data from csvs into dataframe
+
+    Parameters:
+    messages_filepath (str): the filepath to the messages csv
+    categories_filepath (str): the filepath to the categories csv
+
+    Returns:
+    DataFrame: a dataframe of the combined messages and category labels
+    """
+    
     messages = pd.read_csv(messages_filepath)
     categories = pd.read_csv(categories_filepath)
     df = messages.merge(categories, on='id')
@@ -10,6 +21,16 @@ def load_data(messages_filepath, categories_filepath):
     
 
 def clean_data(df):
+    """
+    Cleans the data by splitting the categories into separate columns
+
+    Parameters:
+    df (DataFrame): the input dataframe with all labels in 1 column
+
+    Returns:
+    DataFrame: a dataframe with columns for each category
+    """
+
     categories = df['categories'].str.split(pat=';', expand=True)
     row = categories.iloc[0]
     category_colnames = row.apply(lambda x: x[:-2])
@@ -28,11 +49,22 @@ def clean_data(df):
 
 
 def save_data(df, database_filename):
+    """ Saves the data in df to the database file database_filename in the messages table"""
+
     engine = create_engine('sqlite:///{}'.format(database_filename))
-    df.to_sql('messages', engine, index=False)
+    df.to_sql('messages', engine, index=False, if_exists='replace')
 
 
 def main():
+    """
+    Performs an ETL pipeline on the input data. From csv to sqllite database
+
+    Parameters:
+    messages_filepath (str): the filepath to the messages csv
+    categories_filepath (str): the filepath to the categories csv
+    database_filepath (str): the filepath to the database
+    """
+
     if len(sys.argv) == 4:
 
         messages_filepath, categories_filepath, database_filepath = sys.argv[1:]

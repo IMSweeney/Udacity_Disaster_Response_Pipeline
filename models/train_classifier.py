@@ -18,6 +18,17 @@ import pickle
 
 
 def load_data(database_filepath):
+    """
+    Loads data from database into dataframes for X and Y
+
+    Parameters:
+    database_filepath (str): the filepath to the database
+
+    Returns:
+    X: a dataframe of the messages
+    Y: a dataframe of the categories (indexed same as X)
+    category_names: list of category names from Y
+    """
     engine = create_engine('sqlite:///{}'.format(database_filepath))
     df = pd.read_sql_table('messages', engine)
     X = df['message']
@@ -27,6 +38,7 @@ def load_data(database_filepath):
 
 
 def tokenize(text):
+    """ Tokenizes the imput text and performs basic text cleaning"""
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
 
@@ -39,6 +51,13 @@ def tokenize(text):
 
 
 def build_model():
+    """
+    Creates a sklearn model pipeline and gridsearch parameters
+
+    Returns:
+    GridSearchCV: a GridSearchCV object to use for fitting and predicting
+    """
+
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
         ('tfidf', TfidfTransformer()),
@@ -46,33 +65,56 @@ def build_model():
     ])
     
     parameters = {
-#         'vect__ngram_range': ((1, 1), (1, 2)),
-#         'vect__max_df': (0.5, 0.75, 1.0),
-#         'vect__max_features': (None, 5000, 10000),
-#         'tfidf__use_idf': (True, False),
-        'cls__estimator__n_estimators': [50, 100, 200],
-        'cls__estimator__min_samples_split': [2, 3, 4],
+        # 'vect__ngram_range': ((1, 1), (1, 2)),
+        # 'vect__max_df': (0.5, 0.75, 1.0),
+        # 'vect__max_features': (None, 5000, 10000),
+        # 'tfidf__use_idf': (True, False),
+        # 'cls__estimator__n_estimators': [50, 100, 200],
+        # 'cls__estimator__min_samples_split': [2, 3, 4],
     }
     
-    cv = GridSearchCV(pipeline, param_grid=parameters)
+    # Verbose=1 to display messages during training
+    # n_jobs=2 to run 2 training jobs in parallel
+    # cv=2 to limit the crossvalidation to 2
+    cv = GridSearchCV(pipeline, param_grid=parameters, verbose=1, n_jobs=2, cv=2)
     return cv
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
-    y_pred = cv.predict(X_test)
+    """
+    Evaluates the performance of the ML model
+
+    Parameters:
+    model (Pipeline): a Pipeline or GridSearchCV object to predict with
+    X_test: the message df to make predictions about
+    Y_test: the categories with which to judge the results of the model
+    category_names: the names of each category (column) in Y_test
+
+    """
+
+    y_pred = model.predict(X_test)
     for i, col in enumerate(category_names):
         pred = [p[i] for p in y_pred] 
-        true = y_test[col].values
+        true = Y_test[col].values
         out = classification_report(true, pred)
         print('{}'.format(col))
         print(out)
 
 
 def save_model(model, model_filepath):
+    """ a pickle object that stores the trained ML model at model_filepath"""
     s = pickle.dumps(model, model_filepath)
 
 
 def main():
+    """
+    Performs an ML pipeline on the input data. sqllite database to trained model
+
+    Parameters:
+    database_filepath (str): the filepath to the database
+    model_filepath (str): the filepath to store the trained model
+    """
+
     if len(sys.argv) == 3:
         database_filepath, model_filepath = sys.argv[1:]
         print('Loading data...\n    DATABASE: {}'.format(database_filepath))
