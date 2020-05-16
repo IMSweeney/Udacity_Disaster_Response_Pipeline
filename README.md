@@ -6,23 +6,38 @@ For the ETL Pipeline (in process_data.py) this project used *numpy*, *pandas*, a
 
 For the ML Pipeline (in train_classifier.py) this project used *pandas* and *sqlalchemy* to load the data, *nltk* and *sklearn* to build and train the model, and *pickle* to save the model.
 
+For the Web App (in the app folder) this project used *json*, *plotly*, and *flask* for displays and the web page, and *nltk*, *sklearn*, and *sqlalchemy* for the interactive message categorizer.
+
+import json
+import plotly
+import pandas as pd
+
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
+
+from flask import Flask
+from flask import render_template, request, jsonify
+from plotly.graph_objs import Bar
+from sklearn.externals import joblib
+from sqlalchemy import create_engine
+
 
 Included files:
 
 - app
-| - template
-| |- master.html  # main page of web app
-| |- go.html  # classification result page of web app
-|- run.py  # Flask file that runs app
+	- templates
+		- master.html  # main page of web app
+		- go.html  # classification result page of web app
+	- run.py  # Flask file that runs app
 
 - data
-|- disaster_categories.csv  # data to process 
-|- disaster_messages.csv  # data to process
-|- process_data.py  # script to run an ETL pipeline on raw data
-|- InsertDatabaseName.db   # database to save clean data to
+	- disaster_categories.csv  # data to process 
+	- disaster_messages.csv  # data to process
+	- process_data.py  # script to run an ETL pipeline on raw data
+	- InsertDatabaseName.db   # database to save clean data to
 
 - models
-|- train_classifier.py  # script to train a predictive model
-|- classifier.pkl  # saved model 
+	- train_classifier.py  # script to train a predictive model
+	- classifier.pkl  # saved model 
 
 - README.md

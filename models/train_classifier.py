@@ -1,24 +1,75 @@
 import sys
+from sqlalchemy import create_engine
+import pandas as pd
+
+import nltk
+nltk.download(['punkt', 'wordnet'])
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+
+from sklearn.metrics import classification_report
+from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.multioutput import MultiOutputClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.pipeline import Pipeline, FeatureUnion
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
+
+import pickle
 
 
 def load_data(database_filepath):
-    pass
+    engine = create_engine('sqlite:///{}'.format(database_filepath))
+    df = pd.read_sql_table('messages', engine)
+    X = df['message']
+    y = df.drop(columns=['id', 'message', 'original', 'genre'])
+    category_names = y.columns
+    return X, y, category_names
 
 
 def tokenize(text):
-    pass
+    tokens = word_tokenize(text)
+    lemmatizer = WordNetLemmatizer()
+
+    clean_tokens = []
+    for tok in tokens:
+        clean_tok = lemmatizer.lemmatize(tok).lower().strip()
+        clean_tokens.append(clean_tok)
+
+    return clean_tokens
 
 
 def build_model():
-    pass
+    pipeline = Pipeline([
+        ('vect', CountVectorizer(tokenizer=tokenize)),
+        ('tfidf', TfidfTransformer()),
+        ('cls', MultiOutputClassifier(RandomForestClassifier()))
+    ])
+    
+    parameters = {
+#         'vect__ngram_range': ((1, 1), (1, 2)),
+#         'vect__max_df': (0.5, 0.75, 1.0),
+#         'vect__max_features': (None, 5000, 10000),
+#         'tfidf__use_idf': (True, False),
+        'cls__estimator__n_estimators': [50, 100, 200],
+        'cls__estimator__min_samples_split': [2, 3, 4],
+    }
+    
+    cv = GridSearchCV(pipeline, param_grid=parameters)
+    return cv
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
-    pass
+    y_pred = cv.predict(X_test)
+    for i, col in enumerate(category_names):
+        pred = [p[i] for p in y_pred] 
+        true = y_test[col].values
+        out = classification_report(true, pred)
+        print('{}'.format(col))
+        print(out)
 
 
 def save_model(model, model_filepath):
-    pass
+    s = pickle.dumps(model, model_filepath)
 
 
 def main():
