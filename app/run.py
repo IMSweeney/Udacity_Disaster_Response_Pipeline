@@ -7,7 +7,7 @@ from nltk.tokenize import word_tokenize
 
 from flask import Flask
 from flask import render_template, request, jsonify
-from plotly.graph_objs import Bar
+from plotly.graph_objs import Bar, Pie, Table
 # from sklearn.externals import joblib
 from sqlalchemy import create_engine
 
@@ -45,20 +45,22 @@ def index():
     # TODO: Below is an example - modify to extract data for your own visuals
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
+
+    cat_names = df.columns[4:]
+    cat_sums = df.sum()[cat_names]
+    total = sum(cat_sums)
+    small_sums = [cat for cat in cat_sums.values if cat < 0.1*total]
     
     # create visuals
     # TODO: Below is an example - modify to create your own visuals
     graphs = [
         {
             'data': [
-                Bar(
-                    x=genre_names,
-                    y=genre_counts
-                )
+                Pie(labels=cat_names, values=cat_sums, insidetextfont={'size': 1})
             ],
 
             'layout': {
-                'title': 'Distribution of Message Genres',
+                'title': 'Distribution of Message Categories',
                 'yaxis': {
                     'title': "Count"
                 },
@@ -66,7 +68,26 @@ def index():
                     'title': "Genre"
                 }
             }
-        }
+        },
+        {
+            'data': [
+                Pie(labels=genre_names, values=genre_counts)
+            ],
+            'layout': {
+                'title': 'Distribution of Message Genres'
+            }
+        },
+        {
+            'data': [
+                Table(
+                    header=dict(values=['id', 'message', 'genre']),
+                    cells=dict(values=[df.id, df.message, df.genre])
+                )
+            ],
+            'layout': {
+                'title': 'Messages Table'
+            }
+        },
     ]
     
     # encode plotly graphs in JSON
