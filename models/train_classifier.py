@@ -65,18 +65,18 @@ def build_model():
     ])
     
     parameters = {
-        # 'vect__ngram_range': ((1, 1), (1, 2)),
-        # 'vect__max_df': (0.5, 0.75, 1.0),
-        # 'vect__max_features': (None, 5000, 10000),
-        # 'tfidf__use_idf': (True, False),
-        # 'cls__estimator__n_estimators': [50, 100, 200],
-        # 'cls__estimator__min_samples_split': [2, 3, 4],
+        'vect__ngram_range': ((1, 1), (1, 2)),
+        'vect__max_df': (0.5, 0.75, 1.0),
+        'vect__max_features': (None, 5000, 10000),
+        'tfidf__use_idf': (True, False),
+        'cls__estimator__n_estimators': [50, 100, 200],
+        'cls__estimator__min_samples_split': [2, 3, 4],
     }
     
-    # Verbose=1 to display messages during training
-    # n_jobs=2 to run 2 training jobs in parallel
-    # cv=2 to limit the crossvalidation to 2
-    cv = GridSearchCV(pipeline, param_grid=parameters, verbose=1, n_jobs=2, cv=2)
+    # Verbose to display messages during training (default None)
+    # n_jobs to run training jobs in parallel (default 1)
+    # cv to limit the crossvalidation (default 5)
+    cv = GridSearchCV(pipeline, param_grid=parameters, verbose=1, n_jobs=2)
     return cv
 
 
@@ -99,11 +99,12 @@ def evaluate_model(model, X_test, Y_test, category_names):
         out = classification_report(true, pred)
         print('{}'.format(col))
         print(out)
+    pass
 
 
 def save_model(model, model_filepath):
     """ a pickle object that stores the trained ML model at model_filepath"""
-    s = pickle.dumps(model, model_filepath)
+    s = pickle.dump(model, open(model_filepath, 'wb'))
 
 
 def main():

@@ -8,8 +8,10 @@ from nltk.tokenize import word_tokenize
 from flask import Flask
 from flask import render_template, request, jsonify
 from plotly.graph_objs import Bar
-from sklearn.externals import joblib
+# from sklearn.externals import joblib
 from sqlalchemy import create_engine
+
+import pickle
 
 
 app = Flask(__name__)
@@ -31,7 +33,7 @@ engine = create_engine('sqlite:///../data/DisasterResponse.db')
 df = pd.read_sql_table('messages', engine)
 
 # load model
-model = joblib.load("../models/classifier.pkl")
+model = pickle.load(open("../models/cls_nogrid.pkl", 'rb'))
 
 
 # index webpage displays cool visuals and receives user input text for model
@@ -94,8 +96,8 @@ def go():
 
 
 def main():
-    app.run(host='0.0.0.0', port=3001, debug=True)
-
+    # app.run(host='0.0.0.0', port=3001, debug=True)
+    app.run(host='127.0.0.1', port=3001, debug=True)
 
 if __name__ == '__main__':
     main()
